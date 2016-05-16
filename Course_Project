@@ -1,0 +1,230 @@
+#Practical Machine Learning Course Project
+
+#The goal of your project is to predict the manner in which they did the exercise.
+
+#This is the "classe" variable in the training set.
+
+#You may use any of the other variables to predict with. You should create a report describing how you built your model,
+
+#how you used cross validation, what you think the expected out of sample error is, and why you made the choices you did.
+
+#You will also use your prediction model to predict 20 different test cases.
+
+ 
+
+#First we want to bring in the packages that we will use for this assignment
+
+library(caret);
+
+library(rpart);
+
+library(rpart.plot);
+
+library(rattle);
+
+library(randomForest)
+
+ 
+
+#Next we will to set the seed for this file in order to insure reproducibility for the resutls
+
+set.seed(976)
+
+ 
+
+train_data <- read.csv( "http://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv",
+
+                        na.strings = c("NA", "#DIV/0!", ""))
+
+ 
+
+test_data <- read.csv("http://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv",
+
+                      na.strings = c("NA", "#DIV/0!", ""))
+
+ 
+
+#Now we want to be able to partion our training data set into two sets.  I am going to do a 65% 35% split
+
+inTrain <-createDataPartition(train_data$classe, p=0.65, list=FALSE)
+
+ 
+
+training2 <- train_data[inTrain,]
+
+testing2 <- train_data[-inTrain,]
+
+ 
+
+nzv <- nearZeroVar(training2, saveMetrics = TRUE )
+
+training2 <- training2[,nzv$nzv==FALSE]
+
+ 
+
+nzv <- nearZeroVar(testing2,saveMetrics=TRUE)
+
+testing2 <- testing2[,nzv$nzv==FALSE]
+
+ 
+
+training2 <- training2[c(-1)]
+
+ 
+
+training3 <- training2
+
+for(i in 1:length(training2)){
+
+  if(sum (is.na(training2[,i]))/nrow(training2)>=0.65){
+
+    for(j in 1:length(training3)){
+
+      if(length(grep(names(training2[i]),names(training3)[j])==1)){
+
+        training3 <- training3[,-j]
+
+      }
+
+    }
+
+  }
+
+}
+
+ 
+
+ 
+
+training2 <- training3
+
+rm(training3)
+
+data <- colnames(training2)
+
+data2 <- colnames(training2[,-58])
+
+testing2 <- testing2[data]
+
+test_data <- test_data[data2]
+
+ 
+
+for (i in 1:length(testing)){
+
+  for(j in 1:length(training)){
+
+    if( length( grep(names(training[i]), names(testing)[j]) ) ==1)  {
+
+      class(testing[j])<- class(training[i])
+
+    }
+
+  }
+
+}
+
+ 
+
+test_data <- rbind(training2[2,-58],test_data)
+
+test_data<- test_data[-1,]
+
+ 
+
+#First we will use decision trees to predict
+
+set.seed(976)
+
+DT_fit <- rpart(classe~., data=training2, method="class")
+
+fancyRpartPlot(DT_fit)
+
+ 
+
+DT_predict <- predict(DT_fit, testing2, type="class")
+
+Confusion_DT <- confusionMatrix(DT_predict, testing$classe)
+
+Confusion_DT
+
+ 
+
+Confusion Matrix and Statistics
+
+ 
+
+          Reference
+
+Prediction    A    B    C    D    E
+
+         A 1887   59    7    2    0
+
+         B   53 1116   78   56    0
+
+         C   13  144 1088  126    5
+
+         D    0    9   12  765   72
+
+         E    0    0   12  176 1185
+
+ 
+
+Overall Statistics
+
+                                        
+
+               Accuracy : 0.88          
+
+                 95% CI : (0.872, 0.8876)
+
+    No Information Rate : 0.2845         
+
+    P-Value [Acc > NIR] : < 2.2e-16     
+
+                                        
+
+                  Kappa : 0.8481        
+
+ Mcnemar's Test P-Value : NA            
+
+ 
+
+Statistics by Class:
+
+ 
+
+                     Class: A Class: B Class: C Class: D Class: E
+
+Sensitivity            0.9662   0.8404   0.9089   0.6800   0.9390
+
+Specificity            0.9862   0.9662   0.9492   0.9838   0.9664
+
+Pos Pred Value         0.9652   0.8565   0.7907   0.8916   0.8631
+
+Neg Pred Value         0.9866   0.9619   0.9801   0.9401   0.9860
+
+Prevalence             0.2845   0.1934   0.1744   0.1639   0.1838
+
+Detection Rate         0.2749   0.1626   0.1585   0.1114   0.1726
+
+Detection Prevalence   0.2848   0.1898   0.2004   0.1250   0.2000
+
+Balanced Accuracy      0.9762   0.9033   0.9291   0.8319   0.9527
+
+ 
+
+ 
+Confusion Matrix and Statistics           ReferencePrediction    A    B    C    D    E         A 1953    1    0    0    0         B    0 1327    0    0    0         C    0    0 1192    1    0         D    0    0    5 1124    1         E    0    0    0    0 1261 Overall Statistics                                                         Accuracy : 0.9988                           95% CI : (0.9977, 0.9995)    No Information Rate : 0.2845              P-Value [Acc > NIR] : < 2.2e-16                                                                   Kappa : 0.9985           Mcnemar's Test P-Value : NA               Statistics by Class:                      Class: A Class: B Class: C Class: D Class: ESensitivity            1.0000   0.9992   0.9958   0.9991   0.9992Specificity            0.9998   1.0000   0.9998   0.9990   1.0000Pos Pred Value         0.9995   1.0000   0.9992   0.9947   1.0000Neg Pred Value         1.0000   0.9998   0.9991   0.9998   0.9998Prevalence             0.2845   0.1934   0.1744   0.1639   0.1838Detection Rate         0.2845   0.1933   0.1736   0.1637   0.1837Detection Prevalence   0.2846   0.1933   0.1738   0.1646   0.1837Balanced Accuracy      0.9999   0.9996   0.9978   0.9990   0.9996
+ 
+
+final_prediction <- predict(RF_predict, test_data, type="class")
+
+final_prediction
+
+ 
+
+1  2 31  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20  B  A  B  A  A  E  D  B  A  A  B  C  B  A  E  E  A  B  B  B 
+Levels: A B C D E
+ 
+
