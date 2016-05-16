@@ -1,0 +1,111 @@
+---
+title: "Practical Machine Learning"
+author: "Ryan Jolicoeur"
+date: "May 15, 2016"
+output: html_document
+---
+
+
+#Practical Machine Learning Course Project
+The goal of your project is to predict the manner in which they did the exercise. 
+This is the "classe" variable in the training set. 
+You may use any of the other variables to predict with. You should create a report describing how you built your model, 
+how you used cross validation, what you think the expected out of sample error is, and why you made the choices you did.
+You will also use your prediction model to predict 20 different test cases.
+
+First we need to load the packages that we will be utilize to complete our analysis and predict the exercises
+```{r}
+library(caret);
+library(rpart);
+library(rpart.plot);
+library(rattle);
+library(randomForest)
+```
+
+#Data Preparation
+Next, we need to set seed for reproducibility and load in the data
+```{r Data Load}
+set.seed(976)
+
+train_data <- read.csv( "http://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv", 
+                        na.strings = c("NA", "#DIV/0!", ""))
+
+test_data <- read.csv("http://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv",
+                      na.strings = c("NA", "#DIV/0!", ""))
+```
+
+#Data Preparation and Cleansing
+We need to split our data into our training and test sets.  Given the size I choose a 65% training - 35% test set
+```{r Data Cleanse}
+inTrain <-createDataPartition(train_data$classe, p=0.65, list=FALSE)
+
+training2 <- train_data[inTrain,]
+testing2 <- train_data[-inTrain,]
+
+nzv <- nearZeroVar(training2, saveMetrics = TRUE )
+training2 <- training2[,nzv$nzv==FALSE]
+
+nzv <- nearZeroVar(testing2,saveMetrics=TRUE)
+testing2 <- testing2[,nzv$nzv==FALSE]
+```
+
+#Data Cleansing Continued
+Here we deal with the variables with greater than 65% NA's as well as transform our testing and testing2 data 
+```{r Data Cleanse2}
+training3 <- training2
+for(i in 1:length(training2)){
+  if(sum (is.na(training2[,i]))/nrow(training2)>=0.65){
+    for(j in 1:length(training3)){
+      if(length(grep(names(training2[i]),names(training3)[j])==1)){
+        training3 <- training3[,-j]
+      }
+    }
+  }
+}
+
+training2 <- training3
+rm(training3)
+data <- colnames(training2)
+data2 <- colnames(training2[,-58])
+testing2 <- testing2[data]
+test_data <- test_data[data2]
+
+for (i in 1:length(testing)){
+  for(j in 1:length(training)){
+    if( length( grep(names(training[i]), names(testing)[j]) ) ==1)  {
+      class(testing[j])<- class(training[i])
+    }
+  }
+}
+test_data <- rbind(training2[2,-58],test_data)
+test_data<- test_data[-1,]
+```
+
+#Decision Trees
+Here is where we will use decision trees to predict our data type
+```{r Decision Trees}
+set.seed(976)
+DT_fit <- rpart(classe~., data=training2, method="class")
+fancyRpartPlot(DT_fit)
+
+DT_predict <- predict(DT_fit, testing2, type="class")
+Confusion_DT <- confusionMatrix(DT_predict, testing$classe)
+Confusion_DT
+```
+
+#Random Forest
+The second method that we will utilize to predict the exercises are Random Forests
+```{r Random Forests}
+set.seed(976)
+RF_predict <- randomForest(classe ~ ., data=training2)
+RF_predict2 <- predict(RF_predict, testing2, type = "class")
+confusionMatrix(RF_predict2, testing2$classe)
+```
+
+#Final Analysis
+I did try the Generalized Boosting Method here as well, but given the superior prediction results for Random Forests  I choose to exclude that method from the final analysis.  I used Random Forests to predict our final analysis.  
+```{r Final Results}
+final_prediction <- predict(RF_predict, test_data, type="class")
+final_prediction
+```
+
