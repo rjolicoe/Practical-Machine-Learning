@@ -215,7 +215,32 @@ Balanced Accuracy      0.9762   0.9033   0.9291   0.8319   0.9527
  
 
  
-Confusion Matrix and Statistics           ReferencePrediction    A    B    C    D    E         A 1953    1    0    0    0         B    0 1327    0    0    0         C    0    0 1192    1    0         D    0    0    5 1124    1         E    0    0    0    0 1261 Overall Statistics                                                         Accuracy : 0.9988                           95% CI : (0.9977, 0.9995)    No Information Rate : 0.2845              P-Value [Acc > NIR] : < 2.2e-16                                                                   Kappa : 0.9985           Mcnemar's Test P-Value : NA               Statistics by Class:                      Class: A Class: B Class: C Class: D Class: ESensitivity            1.0000   0.9992   0.9958   0.9991   0.9992Specificity            0.9998   1.0000   0.9998   0.9990   1.0000Pos Pred Value         0.9995   1.0000   0.9992   0.9947   1.0000Neg Pred Value         1.0000   0.9998   0.9991   0.9998   0.9998Prevalence             0.2845   0.1934   0.1744   0.1639   0.1838Detection Rate         0.2845   0.1933   0.1736   0.1637   0.1837Detection Prevalence   0.2846   0.1933   0.1738   0.1646   0.1837Balanced Accuracy      0.9999   0.9996   0.9978   0.9990   0.9996
+Confusion Matrix and Statistics           
+ReferencePrediction    
+A    B    C    D    E         
+A 1953    1    0    0    0         
+B    0 1327    0    0    0         
+C    0    0 1192    1    0         
+D    0    0    5 1124    1        
+E    0    0    0    0 
+
+1261 Overall Statistics                                                        
+Accuracy : 0.9988                           
+95% CI : (0.9977, 0.9995)    
+No Information Rate : 0.2845              
+P-Value [Acc > NIR] : < 2.2e-16                                                                   
+Kappa : 0.9985           Mcnemar's Test P-Value : NA               
+
+Statistics by Class:                      
+Class: A Class: B Class: C Class: D Class: ESensitivity            
+1.0000   0.9992   0.9958   0.9991   0.9992Specificity            
+0.9998   1.0000   0.9998   0.9990   1.0000Pos Pred Value        
+0.9995   1.0000   0.9992   0.9947   1.0000Neg Pred Value         
+1.0000   0.9998   0.9991   0.9998   0.9998Prevalence             
+0.2845   0.1934   0.1744   0.1639   0.1838Detection Rate         
+0.2845   0.1933   0.1736   0.1637   0.1837Detection Prevalence   
+0.2846   0.1933   0.1738   0.1646   0.1837Balanced Accuracy     
+0.9999   0.9996   0.9978   0.9990   0.9996
  
 
 final_prediction <- predict(RF_predict, test_data, type="class")
