@@ -2,7 +2,7 @@
 title: "Practical Machine Learning"
 author: "Ryan Jolicoeur"
 date: "May 15, 2016"
-output: html_document
+output: word_document
 ---
 
 
@@ -42,16 +42,15 @@ inTrain <-createDataPartition(train_data$classe, p=0.65, list=FALSE)
 training2 <- train_data[inTrain,]
 testing2 <- train_data[-inTrain,]
 
+
 nzv <- nearZeroVar(training2, saveMetrics = TRUE )
 training2 <- training2[,nzv$nzv==FALSE]
 
 nzv <- nearZeroVar(testing2,saveMetrics=TRUE)
 testing2 <- testing2[,nzv$nzv==FALSE]
-```
 
-#Data Cleansing Continued
-Here we deal with the variables with greater than 65% NA's as well as transform our testing and testing2 data 
-```{r Data Cleanse2}
+training2 <- training2[c(-1)]
+
 training3 <- training2
 for(i in 1:length(training2)){
   if(sum (is.na(training2[,i]))/nrow(training2)>=0.65){
@@ -70,10 +69,10 @@ data2 <- colnames(training2[,-58])
 testing2 <- testing2[data]
 test_data <- test_data[data2]
 
-for (i in 1:length(testing)){
-  for(j in 1:length(training)){
-    if( length( grep(names(training[i]), names(testing)[j]) ) ==1)  {
-      class(testing[j])<- class(training[i])
+for (i in 1:length(testing2)){
+  for(j in 1:length(training2)){
+    if( length( grep(names(training2[i]), names(testing2)[j]) ) ==1)  {
+      class(testing2[j])<- class(training2[i])
     }
   }
 }
@@ -81,31 +80,40 @@ test_data <- rbind(training2[2,-58],test_data)
 test_data<- test_data[-1,]
 ```
 
-#Decision Trees
-Here is where we will use decision trees to predict our data type
-```{r Decision Trees}
+#Prediction Models
+###Decision Trees
+For the first model we will use Decision Trees to predict 
+
+```{r Decision Tree}
 set.seed(976)
 DT_fit <- rpart(classe~., data=training2, method="class")
 fancyRpartPlot(DT_fit)
 
 DT_predict <- predict(DT_fit, testing2, type="class")
-Confusion_DT <- confusionMatrix(DT_predict, testing$classe)
+Confusion_DT <- confusionMatrix(DT_predict, testing2$classe)
 Confusion_DT
 ```
 
-#Random Forest
-The second method that we will utilize to predict the exercises are Random Forests
-```{r Random Forests}
+###Random Forest
+For the second model we will use Random Forests to predict
+```{r Random Forest}
 set.seed(976)
 RF_predict <- randomForest(classe ~ ., data=training2)
 RF_predict2 <- predict(RF_predict, testing2, type = "class")
 confusionMatrix(RF_predict2, testing2$classe)
 ```
 
-#Final Analysis
-I did try the Generalized Boosting Method here as well, but given the superior prediction results for Random Forests  I choose to exclude that method from the final analysis.  I used Random Forests to predict our final analysis.  
-```{r Final Results}
+#Summary 
+We can see here as expected the Random Forests provides the most accurate prediction between the two models that we compared.  
+
+Hence we will utilize the random forests to make our predictions:
+```{r Summary}
 final_prediction <- predict(RF_predict, test_data, type="class")
 final_prediction
 ```
+
+#Out of sample error
+Using our results we get the out of sample error as being:
+* 1 - 0.9988 = 0.0012
+
 
